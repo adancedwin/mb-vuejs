@@ -32,9 +32,9 @@
 
 <script>
   import axios from "axios";
-  import NProgress from "nprogress";
   import Row from "./components/Row";
-  import 'nprogress/nprogress.css';
+  // import NProgress from "nprogress";
+  // import 'nprogress/nprogress.css';
 
   export default {
     name: 'App',
@@ -52,19 +52,31 @@
       };
     },
     async created() {
-      NProgress.start();
-      const response = await axios.get('https://jsonplaceholder.typicode.com/albums')
-      await this.assembleRows(response.data);
-      this.allRowsCached = [...this.rows];
-      NProgress.done()
+      let rows = this.allRows;
+      if (rows.length === 0) {
+        await this.fetchRows();
+      }
+      this.rows = this.getSomeRows;
+    },
+    computed: {
+      allRows() {
+        return this.allRowsCached;
+      },
+      getSomeRows() {
+        return this.allRowsCached.slice(0, 25);
+      }
     },
     methods: {
+      async fetchRows() {
+        const response = await axios.get('https://jsonplaceholder.typicode.com/albums')
+        await this.assembleRows(response.data);
+        this.allRowsCached = [...this.allRowsCached];
+      },
       async assembleRows(albums) {
-        NProgress.inc();
         const photos = await axios.get('https://jsonplaceholder.typicode.com/photos');
         for (let i = 0; i < albums.length; i++) {
           const albumPhotos = await this.getAlbumPhotos(albums[i], photos.data);
-          this.rows = [...this.rows, ...albumPhotos];
+          this.allRowsCached = [...this.allRowsCached, ...albumPhotos];
         }
       },
       getAlbumPhotos(album, photos) {
@@ -139,17 +151,17 @@
     text-align: center;
     color: #2c3e50;
     margin-top: 60px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    /* An attempt to have 25 scrollable rows, couldn't figure out a better way at the time */
-    max-height: 2100px;
+    /*overflow-y: auto;*/
+    /*overflow-x: hidden;*/
+    /*!* An attempt to have 25 scrollable rows, couldn't figure out a better way at the time *!*/
+    /*max-height: 2100px;*/
   }
 
   th {
     top: 0;
     position: sticky;
     background: white;
-    z-index: 2;
+    /*z-index: 2;*/
   }
 
   #search-bar {
