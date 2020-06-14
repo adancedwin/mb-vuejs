@@ -48,22 +48,25 @@
         rows: [],
         allRowsCached: [],
         searchInput: '',
-        filterInput: ''
+        filterInput: '',
+        scroll: 0,
       };
     },
     async created() {
+      window.addEventListener('scroll', this.handleScroll);
+      this.scroll = 3300;
       let rows = this.allRows;
       if (rows.length === 0) {
         await this.fetchRows();
       }
-      this.rows = this.getSomeRows;
+      this.rows = this.getSomeRows();
+    },
+    destroyed () {
+      window.removeEventListener('scroll', this.handleScroll);
     },
     computed: {
       allRows() {
         return this.allRowsCached;
-      },
-      getSomeRows() {
-        return this.allRowsCached.slice(0, 25);
       }
     },
     methods: {
@@ -112,12 +115,14 @@
         const rowsData = this.allRowsCached;
         let results = [];
         if (this.searchInput.length === 0) {
-          return this.rows = this.allRowsCached;
-        }
-        for (let i = 0; i < rowsData.length; i++) {
-          const item = rowsData[i];
-          if (item.albumTitle.includes(this.searchInput) || item.photoTitle.includes(this.searchInput)) {
-            results.push(item);
+          this.resetScroll();
+          results = this.getSomeRows();
+        } else {
+          for (let i = 0; i < rowsData.length; i++) {
+            const item = rowsData[i];
+            if (item.albumTitle.includes(this.searchInput) || item.photoTitle.includes(this.searchInput)) {
+              results.push(item);
+            }
           }
         }
         this.rows = results;
@@ -126,18 +131,35 @@
         const rowsData = this.allRowsCached;
         let results = [];
         if (this.filterInput.length === 0) {
-          return this.rows = this.allRowsCached;
-        }
-        const albumIdValue = Number(this.filterInput)
-        if (isNaN(Number(this.filterInput)) === false) {
-          for (let i = 0; i < rowsData.length; i++) {
-            const item = rowsData[i];
-            if (item.albumId === albumIdValue) {
-              results.push(item);
+          this.resetScroll();
+          results = this.getSomeRows();
+        } else {
+          const albumIdValue = Number(this.filterInput)
+          if (isNaN(Number(this.filterInput)) === false) {
+            for (let i = 0; i < rowsData.length; i++) {
+              const item = rowsData[i];
+              if (item.albumId === albumIdValue) {
+                results.push(item);
+              }
             }
           }
         }
         this.rows = results;
+      },
+      getSomeRows() {
+        const defaultRowsAmount = 25;
+        const startIndexValue = this.rows.length < defaultRowsAmount ? 0 : this.rows.length;
+        const endIndexValue = startIndexValue + defaultRowsAmount;
+        return this.allRowsCached.slice(startIndexValue, endIndexValue);
+      },
+      handleScroll() {
+        if (window.scrollY > this.scroll && (this.searchInput.length === 0 && this.filterInput.length === 0)) {
+          this.scroll += 3300;
+          this.rows = [...this.rows, ...this.getSomeRows()];
+        }
+      },
+      resetScroll() {
+        this.scroll = 3300;
       }
     }
   }
@@ -151,17 +173,12 @@
     text-align: center;
     color: #2c3e50;
     margin-top: 60px;
-    /*overflow-y: auto;*/
-    /*overflow-x: hidden;*/
-    /*!* An attempt to have 25 scrollable rows, couldn't figure out a better way at the time *!*/
-    /*max-height: 2100px;*/
   }
 
   th {
     top: 0;
     position: sticky;
     background: white;
-    /*z-index: 2;*/
   }
 
   #search-bar {
