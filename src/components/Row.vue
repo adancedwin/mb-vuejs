@@ -9,6 +9,7 @@
 
 <script>
   export default {
+    name: "Row",
     props: ['row']
   };
 </script>
