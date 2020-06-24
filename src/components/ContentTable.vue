@@ -1,13 +1,7 @@
 <template>
   <div id="app">
     <search></search>
-    <input
-      type="text"
-      placeholder="Album Id"
-      id="album-filter"
-      v-model="filterInput"
-      @keyup.enter="filterAlbumById()"
-    >
+    <filterItems></filterItems>
     <table>
       <thead>
       <tr>
@@ -27,12 +21,13 @@
 <script>
   import axios from "axios";
   import Search from "./Search";
+  import FilterItems from "./FilterItems";
   import Row from "./Row";
 
   export default {
     name: 'Table',
     components: {
-      Row, Search
+      Row, Search, FilterItems
     },
     props: ["searchInput"],
     data() {
@@ -40,16 +35,13 @@
         nextSort: 'desc',
         sortKey: 'albumId',
         rows: [],
-        allRowsCached: [],
-        filterInput: '',
         scroll: 0,
       };
     },
     async created() {
       window.addEventListener('scroll', this.handleScroll);
       this.scroll = 3300;
-      let rows = this.allRows;
-      if (rows.length === 0) {
+      if (localStorage.getItem("allRowsCached") === null) {
         await this.fetchRows();
       }
       this.rows = this.getSomeRows();
@@ -59,21 +51,24 @@
     },
     computed: {
       allRows() {
-        return this.allRowsCached;
+        return JSON.parse(localStorage.getItem('allRowsCached'));
       }
     },
     methods: {
       async fetchRows() {
         const response = await axios.get('https://jsonplaceholder.typicode.com/albums')
-        await this.assembleRows(response.data);
-        this.allRowsCached = [...this.allRowsCached];
+        const allRows = await this.assembleRows(response.data);
+        console.log(allRows);
+        localStorage.setItem('allRowsCached', JSON.stringify(allRows));
       },
       async assembleRows(albums) {
+        let allRows = [];
         const photos = await axios.get('https://jsonplaceholder.typicode.com/photos');
         for (let i = 0; i < albums.length; i++) {
           const albumPhotos = await this.getAlbumPhotos(albums[i], photos.data);
-          this.allRowsCached = [...this.allRowsCached, ...albumPhotos];
+          allRows = [...allRows, ...albumPhotos];
         }
+        return allRows;
       },
       getAlbumPhotos(album, photos) {
         let items = [];
@@ -108,36 +103,17 @@
         const defaultRowsAmount = 25;
         const startIndexValue = this.rows.length < defaultRowsAmount ? 0 : this.rows.length;
         const endIndexValue = startIndexValue + defaultRowsAmount;
-        return this.allRowsCached.slice(startIndexValue, endIndexValue);
+        return this.allRows.slice(startIndexValue, endIndexValue);
       },
       handleScroll() {
         if (window.scrollY > this.scroll && (this.searchInput.length === 0 && this.filterInput.length === 0)) {
           this.scroll += 3300;
-          this.rows = [...this.rows, ...this.getSomeRows()];
+          this.rows.push(this.getSomeRows());
         }
       },
       resetScroll() {
         this.scroll = 3300;
       },
-      filterAlbumById() {
-        const rowsData = this.allRowsCached;
-        let results = [];
-        if (this.filterInput.length === 0) {
-          this.resetScroll();
-          results = this.getSomeRows();
-        } else {
-          const albumIdValue = Number(this.filterInput)
-          if (isNaN(Number(this.filterInput)) === false) {
-            for (let i = 0; i < rowsData.length; i++) {
-              const item = rowsData[i];
-              if (item.albumId === albumIdValue) {
-                results.push(item);
-              }
-            }
-          }
-        }
-        this.rows = results;
-        },
     }
   }
 </script>
@@ -147,10 +123,5 @@
     top: 0;
     position: sticky;
     background: white;
-  }
-
-  #album-filter {
-    margin: 10px;
-    max-width: 70px;
   }
 </style>
