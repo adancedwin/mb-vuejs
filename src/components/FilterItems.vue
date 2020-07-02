@@ -17,18 +17,30 @@
       return {
         filterInput: '',
       };
-    },
-    computed: {
-      allRows() {
-          return JSON.parse(localStorage.getItem('allRowsCached'));
+    },    
+    created() {
+      const rowsFilterInput = this.getFilterInput();
+      if (rowsFilterInput === null) {
+        return this.setFilterInput();
+      } else if (rowsFilterInput.length > 0) {
+        return this.FilterInput = rowsFilterInput;
       }
     },
     methods: {
+      getAllRows() {
+        return JSON.parse(localStorage.getItem('allRowsCached'));
+      },
       getSomeRows() {
         const defaultRowsAmount = 25;
         const startIndexValue = this.rows.length < defaultRowsAmount ? 0 : this.rows.length;
         const endIndexValue = startIndexValue + defaultRowsAmount;
-        return this.allRows.slice(startIndexValue, endIndexValue);
+        return this.getAllRows.slice(startIndexValue, endIndexValue);
+      },
+      getFilterInput() {
+        return JSON.parse(localStorage.getItem('rowsFilterInput'));
+      },
+      setFilterInput() {
+        localStorage.setItem('rowsFilterInput', JSON.stringify(this.filterInput));
       },
       filterAlbumById() {
         const rowsData = JSON.parse(localStorage.getItem('allRowsCached'));

@@ -18,27 +18,39 @@
         searchInput: '',
       };
     },
-    computed: {
-      allRows() {
-        return JSON.parse(localStorage.getItem('allRowsCached'));
+    created() {
+      const rowsSearchInput = this.getSearchInput();
+      if (rowsSearchInput === null) {
+        return this.setSearchInput();
+      } else if (rowsSearchInput.length > 0) {
+        return this.searchInput = rowsSearchInput;
       }
     },
     methods: {
+      getAllRows() {
+        return JSON.parse(localStorage.getItem('allRowsCached'));
+      },
       getSomeRows() {
         const defaultRowsAmount = 25;
         const startIndexValue = this.rows.length < defaultRowsAmount ? 0 : this.rows.length;
         const endIndexValue = startIndexValue + defaultRowsAmount;
-        return this.allRows.slice(startIndexValue, endIndexValue);
+        return this.getAllRows.slice(startIndexValue, endIndexValue);
+      },
+      getSearchInput() {
+        return JSON.parse(localStorage.getItem('rowsSearchInput'));
+      },
+      setSearchInput() {
+        localStorage.setItem('rowsSearchInput', JSON.stringify(this.searchInput));
       },
       searchAlbumPhotoTitle() {
-        const rowsData = JSON.parse(localStorage.getItem('allRowsCached'));
+        this.setSearchInput();
+        const rowsData = this.getAllRows();
         let results = [];
         if (this.searchInput.length === 0) {
           this.resetScroll();
           results = this.getSomeRows();
         } else {
-          for (let i = 0; i < rowsData.length; i++) {
-            const item = rowsData[i];
+          for (const item of rowsData) {
             if (item.albumTitle.includes(this.searchInput) || item.photoTitle.includes(this.searchInput)) {
               results.push(item);
             }

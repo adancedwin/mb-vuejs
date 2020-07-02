@@ -49,16 +49,10 @@
     destroyed () {
       window.removeEventListener('scroll', this.handleScroll);
     },
-    computed: {
-      allRows() {
-        return JSON.parse(localStorage.getItem('allRowsCached'));
-      }
-    },
     methods: {
       async fetchRows() {
         const response = await axios.get('https://jsonplaceholder.typicode.com/albums')
         const allRows = await this.assembleRows(response.data);
-        console.log(allRows);
         localStorage.setItem('allRowsCached', JSON.stringify(allRows));
       },
       async assembleRows(albums) {
@@ -99,14 +93,26 @@
         this.rows = sortingRows.sort(sortingFunc);
         this.nextSort = this.nextSort === 'asc' ? 'desc' : 'asc';
       },
+      getAllRows() {
+        return JSON.parse(localStorage.getItem('allRowsCached'));
+      },
       getSomeRows() {
         const defaultRowsAmount = 25;
         const startIndexValue = this.rows.length < defaultRowsAmount ? 0 : this.rows.length;
         const endIndexValue = startIndexValue + defaultRowsAmount;
-        return this.allRows.slice(startIndexValue, endIndexValue);
+        let allRows = this.getAllRows();
+        return allRows.slice(startIndexValue, endIndexValue);
+      },
+      getSearchInput() {
+        return JSON.parse(localStorage.getItem('rowsSearchInput'));
+      },
+      getFilterInput() {
+        return JSON.parse(localStorage.getItem('rowsFilterInput'));
       },
       handleScroll() {
-        if (window.scrollY > this.scroll && (this.searchInput.length === 0 && this.filterInput.length === 0)) {
+        const searchInput = this.getSearchInput;
+        const filterInput = this.getFilterInput;
+        if (window.scrollY > this.scroll && (searchInput.length === 0 && filterInput.length === 0)) {
           this.scroll += 3300;
           this.rows.push(this.getSomeRows());
         }
