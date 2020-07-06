@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <search></search>
-    <filterItems></filterItems>
+    <search v-model="rows"></search>
+    <filterItems v-model="rows" @keyupEnter="updateRows"></filterItems>
     <table>
       <thead>
       <tr>
@@ -50,6 +50,9 @@
       window.removeEventListener('scroll', this.handleScroll);
     },
     methods: {
+      updateRows(newRows) {
+        this.rows = newRows;
+      },
       async fetchRows() {
         const response = await axios.get('https://jsonplaceholder.typicode.com/albums')
         const allRows = await this.assembleRows(response.data);

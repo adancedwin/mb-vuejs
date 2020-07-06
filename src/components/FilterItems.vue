@@ -4,7 +4,7 @@
     placeholder="Album Id"
     id="album-filter"
     v-model="filterInput"
-    @keyup.enter="filterAlbumById()"
+    v-on:keyup.enter="updateContentTableRows"
   >
 </template>
 
@@ -27,6 +27,9 @@
       }
     },
     methods: {
+      updateContentTableRows() {
+        this.$emit("keyupEnter", this.filterAlbumById())
+      },
       getAllRows() {
         return JSON.parse(localStorage.getItem('allRowsCached'));
       },
@@ -51,15 +54,14 @@
         } else {
           const albumIdValue = Number(this.filterInput)
           if (isNaN(Number(this.filterInput)) === false) {
-            for (let i = 0; i < rowsData.length; i++) {
-              const item = rowsData[i];
+            for (const item of rowsData) {
               if (item.albumId === albumIdValue) {
-                results.push(item);
+                  results.push(item);
               }
             }
           }
         }
-        this.rows = results;
+        return results;
       },
     }
   }
