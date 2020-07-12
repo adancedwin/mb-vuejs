@@ -4,46 +4,57 @@
     placeholder="Album Title or Photo Title"
     id="search-bar"
     v-model="searchInput"
-    @keyup.enter="searchAlbumPhotoTitle()"
+    v-on:keyup.enter="updateContentTableRows(searchAlbumPhotoTitle())"
   >
 </template>
 
 <script>
   export default {
     name: 'Search',
-    components: {},
-    props: ["rows"],
     data() {
       return {
-        searchInput: '',
+        searchInput: "",
       };
     },
-    created() {
-      const rowsSearchInput = this.getSearchInput();
+    mounted() {
+      const rowsSearchInput = this.getCachedSearchInput();
       if (rowsSearchInput === null) {
-        return this.setSearchInput();
-      } else if (rowsSearchInput.length > 0) {
-        return this.searchInput = rowsSearchInput;
+        this.cacheSearchInput(this.searchInput);
+      } else {
+        this.searchInput = rowsSearchInput;
       }
+      this.manageSearchInput();
     },
     methods: {
+      manageSearchInput() {
+        const rowsSearchInput = this.getCachedSearchInput();
+        if (this.searchInput.length > 0) {
+          return this.cacheSearchInput(this.searchInput);
+        } else if (this.searchInput.length === 0 && rowsSearchInput.length > 0) {
+          return this.cacheSearchInput(this.searchInput);
+        }
+      },
+      updateContentTableRows(newRows) {
+        this.$emit("keyupEnter", newRows)
+      },
       getAllRows() {
         return JSON.parse(localStorage.getItem('allRowsCached'));
       },
       getSomeRows() {
+        let allRows = this.getAllRows();
         const defaultRowsAmount = 25;
-        const startIndexValue = this.rows.length < defaultRowsAmount ? 0 : this.rows.length;
+        const startIndexValue = 0;
         const endIndexValue = startIndexValue + defaultRowsAmount;
-        return this.getAllRows.slice(startIndexValue, endIndexValue);
+        return allRows.slice(startIndexValue, endIndexValue);
       },
-      getSearchInput() {
+      getCachedSearchInput() {
         return JSON.parse(localStorage.getItem('rowsSearchInput'));
       },
-      setSearchInput() {
-        localStorage.setItem('rowsSearchInput', JSON.stringify(this.searchInput));
+      cacheSearchInput(value) {
+        localStorage.setItem('rowsSearchInput', JSON.stringify(value));
       },
       searchAlbumPhotoTitle() {
-        this.setSearchInput();
+        this.manageSearchInput();
         const rowsData = this.getAllRows();
         let results = [];
         if (this.searchInput.length === 0) {
@@ -56,7 +67,10 @@
             }
           }
         }
-        this.rows = results;
+        return results;
+      },
+      resetScroll() {
+        this.scroll = 3300;
       },
     }
   }

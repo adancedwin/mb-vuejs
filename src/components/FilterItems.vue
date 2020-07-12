@@ -4,48 +4,57 @@
     placeholder="Album Id"
     id="album-filter"
     v-model="filterInput"
-    v-on:keyup.enter="updateContentTableRows"
+    v-on:keyup.enter="updateContentTableRows(filterAlbumById())"
   >
 </template>
 
 <script>
   export default {
     name: 'FilterItems',
-    components: {},
-    props: ["rows"],
     data() {
       return {
-        filterInput: '',
+        filterInput: "",
       };
-    },    
-    created() {
-      const rowsFilterInput = this.getFilterInput();
+    },
+    mounted() {
+      const rowsFilterInput = this.getCachedFilterInput();
       if (rowsFilterInput === null) {
-        return this.setFilterInput();
-      } else if (rowsFilterInput.length > 0) {
-        return this.FilterInput = rowsFilterInput;
+        this.cacheFilterInput(this.filterInput);
+      } else {
+        this.filterInput = rowsFilterInput;
       }
+      this.manageFilterInput();
     },
     methods: {
-      updateContentTableRows() {
-        this.$emit("keyupEnter", this.filterAlbumById())
+      manageFilterInput() {
+        const rowsFilterInput = this.getCachedFilterInput();
+        if (this.filterInput.length > 0) {
+          return this.cacheFilterInput(this.filterInput);
+        } else if (this.filterInput.length === 0 && rowsFilterInput.length > 0) {
+          return this.cacheFilterInput(this.filterInput);
+        }
+      },
+      updateContentTableRows(newRows) {
+        this.$emit("keyupEnter", newRows)
       },
       getAllRows() {
         return JSON.parse(localStorage.getItem('allRowsCached'));
       },
       getSomeRows() {
         const defaultRowsAmount = 25;
-        const startIndexValue = this.rows.length < defaultRowsAmount ? 0 : this.rows.length;
+        const startIndexValue = 0;
         const endIndexValue = startIndexValue + defaultRowsAmount;
-        return this.getAllRows.slice(startIndexValue, endIndexValue);
+        let allRows = this.getAllRows();
+        return allRows.slice(startIndexValue, endIndexValue);
       },
-      getFilterInput() {
+      getCachedFilterInput() {
         return JSON.parse(localStorage.getItem('rowsFilterInput'));
       },
-      setFilterInput() {
-        localStorage.setItem('rowsFilterInput', JSON.stringify(this.filterInput));
+      cacheFilterInput(value) {
+        localStorage.setItem('rowsFilterInput', JSON.stringify(value));
       },
       filterAlbumById() {
+        this.manageFilterInput()
         const rowsData = JSON.parse(localStorage.getItem('allRowsCached'));
         let results = [];
         if (this.filterInput.length === 0) {
@@ -62,6 +71,9 @@
           }
         }
         return results;
+      },
+      resetScroll() {
+        this.scroll = 3300;
       },
     }
   }

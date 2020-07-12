@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <search v-model="rows"></search>
+    <search v-model="rows" @keyupEnter="updateRows"></search>
     <filterItems v-model="rows" @keyupEnter="updateRows"></filterItems>
     <table>
       <thead>
@@ -29,7 +29,6 @@
     components: {
       Row, Search, FilterItems
     },
-    props: ["searchInput"],
     data() {
       return {
         nextSort: 'desc',
